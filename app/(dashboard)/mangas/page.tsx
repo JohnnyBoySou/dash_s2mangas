@@ -3,9 +3,9 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { PlusIcon } from "lucide-react"
-import { DataTable } from "@/components/data-table/data-table"
-import { columns } from "@/components/mangas-table/columns"
-import { MangaModal } from "@/components/manga-modal"
+import { DataTable } from "@/components/tables/data-table/data-table"
+import { columns } from "@/components/tables/mangas-table/columns"
+import { MangaModal } from "@/components/modals/manga-modal"
 import { useMangas } from "@/hooks/use-mangas"
 import type { Manga } from "@/types/manga"
 

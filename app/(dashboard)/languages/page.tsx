@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { PlusIcon } from "lucide-react"
-import { DataTable } from "@/components/data-table/data-table"
-import { columns } from "@/components/languages-table/columns"
+import { DataTable } from "@/components/tables/data-table/data-table"
+import { columns } from "@/components/tables/languages-table/columns"
 import { LanguageModal } from "@/components/modals/language-modal"
 import type { Language } from "@/types/database"
 

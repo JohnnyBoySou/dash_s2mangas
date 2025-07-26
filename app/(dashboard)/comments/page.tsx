@@ -3,8 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { PlusIcon } from "lucide-react"
-import { DataTable } from "@/components/data-table/data-table"
-import { columns } from "@/components/comments-table/columns"
+import { DataTable } from "@/components/tables/data-table/data-table"
+import { columns } from "@/components/tables/comments-table/columns"
 import { CommentModal } from "@/components/modals/comment-modal"
 import type { Comment } from "@/types/database"
 
