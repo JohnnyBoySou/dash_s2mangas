@@ -1,8 +1,8 @@
-import type { StatisticsData } from "@/types/database"
-import type { Statistic } from "@/types/manga"
+//import type { StatisticsData } from "@/types/database"
+//import type { Statistic } from "@/types/manga"
 
 export const StatisticsService = {
-  getStatistics: async (): Promise<StatisticsData> => {
+  getStatistics: async (): Promise<any> => {
     // Simulate API call delay
     await new Promise((resolve) => setTimeout(resolve, 700))
     return {
@@ -82,7 +82,7 @@ export const StatisticsService = {
       ],
     }
   },
-  getDailyStatistics: async (): Promise<Statistic[]> => {
+  getDailyStatistics: async (): Promise<any[]> => {
     await new Promise((resolve) => setTimeout(resolve, 500))
     return [
       { date: "2023-01-01", mangasAdded: 5, chaptersAdded: 10, reviewsAdded: 3, commentsAdded: 7, usersRegistered: 20 },
