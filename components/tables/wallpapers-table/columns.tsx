@@ -10,25 +10,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal } from "lucide-react"
+import { MoreHorizontal, Eye } from "lucide-react"
+import { useRouter } from "next/navigation"
 import type { Wallpaper } from "@/types/database"
 
 export const columns = (
   onEdit: (wallpaper: Wallpaper) => void,
-  onDelete: (id: string) => void,
+  onDelete: (id: string, name: string) => void,
 ): ColumnDef<Wallpaper>[] => [
   {
-    accessorKey: "title",
-    header: "Title",
+    accessorKey: "name",
+    header: "Name",
   },
   {
-    accessorKey: "imageUrl",
-    header: "Image",
+    accessorKey: "cover",
+    header: "Cover",
     cell: ({ row }) =>
-      row.original.imageUrl ? (
+      row.original.cover ? (
         <img
-          src={row.original.imageUrl || "/placeholder.svg"}
-          alt={row.original.title}
+          src={row.original.cover || "/placeholder.svg"}
+          alt={row.original.name}
           className="h-10 w-10 object-cover rounded-md"
         />
       ) : (
@@ -36,44 +37,54 @@ export const columns = (
       ),
   },
   {
-    accessorKey: "category",
-    header: "Category",
+    accessorKey: "totalImages",
+    header: "Total Images",
+    cell: ({ row }) => row.original.totalImages || row.original._count?.images || 0,
   },
   {
-    accessorKey: "uploaderId",
-    header: "Uploader ID",
-  },
-  {
-    accessorKey: "views",
-    header: "Views",
-  },
-  {
-    accessorKey: "downloads",
-    header: "Downloads",
+    accessorKey: "createdAt",
+    header: "Created At",
+    cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString(),
   },
   {
     id: "actions",
     cell: ({ row }) => {
       const wallpaper = row.original
+      const router = useRouter()
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(wallpaper.id)}>
-              Copy Wallpaper ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onEdit(wallpaper)}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDelete(wallpaper.id)}>Delete</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push(`/wallpapers/${wallpaper.id}`)}
+          >
+            <Eye className="h-4 w-4 mr-1" />
+            Ver Detalhes
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(wallpaper.id)}>
+                Copy Wallpaper ID
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onEdit(wallpaper)}>Edit</DropdownMenuItem>
+              <DropdownMenuItem 
+                 onClick={() => onDelete(wallpaper.id, wallpaper.name || `Wallpaper ${wallpaper.id.slice(0, 8)}`)}
+                 className="text-red-600 focus:text-red-600"
+               >
+                 Delete
+               </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       )
     },
   },

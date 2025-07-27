@@ -6,11 +6,15 @@ import { PlusIcon } from "lucide-react"
 import { DataTable } from "@/components/tables/data-table/data-table"
 import { columns } from "@/components/tables/categories-table/columns"
 import { CategoryModal } from "@/components/modals/category-modal"
+import { DeleteConfirmationModal } from "@/components/ui/delete-confirmation-modal"
 import type { Category } from "@/types/database"
 
 export default function CategoriesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [categoryToDelete, setCategoryToDelete] = useState<{ id: string, name: string } | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Mock data for categories
   const [categories, setCategories] = useState<Category[]>([
@@ -53,8 +57,29 @@ export default function CategoriesPage() {
     setCategories((prev) => prev.map((category) => (category.id === updatedCategory.id ? updatedCategory : category)))
   }
 
-  const deleteCategory = (id: string) => {
-    setCategories((prev) => prev.filter((category) => category.id !== id))
+  const deleteCategory = (id: string, name: string) => {
+    setCategoryToDelete({ id, name })
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!categoryToDelete) return
+    
+    setIsDeleting(true)
+    try {
+      setCategories((prev) => prev.filter((category) => category.id !== categoryToDelete.id))
+      setIsDeleteModalOpen(false)
+      setCategoryToDelete(null)
+    } catch (error) {
+      console.error('Erro ao deletar categoria:', error)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false)
+    setCategoryToDelete(null)
   }
 
   const handleAddClick = () => {
@@ -95,6 +120,14 @@ export default function CategoriesPage() {
         onClose={handleModalClose}
         onSave={handleSaveCategory}
         category={selectedCategory}
+      />
+      
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        itemName={categoryToDelete?.name || ""}
+        isLoading={isDeleting}
       />
     </div>
   )

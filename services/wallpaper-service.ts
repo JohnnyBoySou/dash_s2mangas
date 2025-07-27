@@ -1,79 +1,121 @@
-import type { Wallpaper } from "@/types/database"
+import type { Wallpaper, WallpaperListResponse, WallpaperSingleResponse, WallpaperImage } from "@/types/database"
+import { get, post, del, put } from "./api-service"
 
-// Mock data for wallpapers
-const mockWallpapers: Wallpaper[] = [
-  {
-    id: "wp-1",
-    title: "Forest Path",
-    imageUrl: "/placeholder.svg?height=1080&width=1920",
-    category: "Nature",
-    tags: ["forest", "trees", "path", "green"],
-    uploaderId: "user-1",
-    views: 1500,
-    downloads: 500,
-    createdAt: "2023-01-01T10:00:00Z",
-    updatedAt: "2023-01-01T10:00:00Z",
-  },
-  {
-    id: "wp-2",
-    title: "City Night Lights",
-    imageUrl: "/placeholder.svg?height=1080&width=1920",
-    category: "Cityscape",
-    tags: ["city", "night", "lights", "urban"],
-    uploaderId: "user-2",
-    views: 2000,
-    downloads: 750,
-    createdAt: "2023-01-05T10:00:00Z",
-    updatedAt: "2023-01-05T10:00:00Z",
-  },
-  {
-    id: "wp-3",
-    title: "Abstract Waves",
-    imageUrl: "/placeholder.svg?height=1080&width=1920",
-    category: "Abstract",
-    tags: ["abstract", "waves", "colorful", "modern"],
-    uploaderId: "user-1",
-    views: 1000,
-    downloads: 300,
-    createdAt: "2023-01-10T10:00:00Z",
-    updatedAt: "2023-01-10T10:00:00Z",
-  },
-]
+// QUERY_KEYS
+const LIST_WALLPAPERS = "LIST_WALLPAPERS"
+const GET_WALLPAPER = "GET_WALLPAPER"
 
-export const getWallpapers = async (): Promise<Wallpaper[]> => {
-  // Simulate API call delay
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  return mockWallpapers
+const ROUTE_API = "/wallpapers"
+const ROUTE_ADMIN_API = "/admin/wallpapers"
+
+// INTERFACES
+export interface WallpaperCreateRequest {
+  name: string
+  cover: string
 }
 
-export const addMockWallpaper = async (
-  newWallpaper: Omit<Wallpaper, "id" | "createdAt" | "updatedAt">,
-): Promise<Wallpaper> => {
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  const id = `wp-${mockWallpapers.length + 1}`
-  const wallpaper = { ...newWallpaper, id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
-  mockWallpapers.push(wallpaper)
-  return wallpaper
+export interface WallpaperUpdateRequest extends WallpaperCreateRequest {
+  id: string
 }
 
-export const updateMockWallpaper = async (updatedWallpaper: Wallpaper): Promise<Wallpaper> => {
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  const index = mockWallpapers.findIndex((w) => w.id === updatedWallpaper.id)
-  if (index !== -1) {
-    mockWallpapers[index] = { ...updatedWallpaper, updatedAt: new Date().toISOString() }
-    return mockWallpapers[index]
-  }
-  throw new Error("Wallpaper not found")
+export interface WallpaperImageCreateRequest {
+  url: string
+  wallpaperId: string
 }
 
-export const deleteMockWallpaper = async (id: string): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  const initialLength = mockWallpapers.length
-  mockWallpapers.splice(
-    mockWallpapers.findIndex((wallpaper) => wallpaper.id === id),
-    1,
-  )
-  if (mockWallpapers.length === initialLength) {
-    throw new Error("Wallpaper not found")
+export interface WallpaperImageUpdateRequest extends WallpaperImageCreateRequest {
+  id: string
+}
+
+// FUNCTIONS
+export const WallpapersService = {
+  async list(page: number = 1, limit: number = 10): Promise<WallpaperListResponse | null> {
+    try {
+      const res = await get<WallpaperListResponse>(`${ROUTE_API}?page=${page}&limit=${limit}`)
+      console.log(res.data)
+      return res?.data as WallpaperListResponse
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro na listagem de wallpapers')
+    }
+  },
+
+  async getById(id: string, page: number = 1, limit: number = 20): Promise<WallpaperSingleResponse | null> {
+    try {
+      const res = await get<WallpaperSingleResponse>(`${ROUTE_API}/${id}?page=${page}&limit=${limit}`)
+      console.log(res.data)
+      return res?.data as WallpaperSingleResponse
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro ao buscar wallpaper')
+    }
+  },
+
+  async create(data: WallpaperCreateRequest): Promise<Wallpaper | null> {
+    try {
+      const res = await post<Wallpaper>(`${ROUTE_ADMIN_API}`, data as unknown as Record<string, unknown>)
+      console.log(res.data)
+      return res?.data as Wallpaper
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro na criação de wallpaper')
+    }
+  },
+
+  async delete(id: string): Promise<void> {
+    try {
+      await del(`${ROUTE_ADMIN_API}/${id}`)
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro ao deletar wallpaper')
+    }
+  },
+
+  async edit(id: string, data: WallpaperUpdateRequest): Promise<Wallpaper | null> {
+    try {
+      const res = await put<Wallpaper>(`${ROUTE_ADMIN_API}/${id}`, data as unknown as Record<string, unknown>)
+      console.log(res.data)
+      return res?.data as Wallpaper
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro ao editar wallpaper')
+    }
+  },
+
+  // Funções para gerenciar imagens
+  async addImage(data: WallpaperImageCreateRequest): Promise<WallpaperImage | null> {
+    try {
+      const res = await post<WallpaperImage>(`${ROUTE_ADMIN_API}/${data.wallpaperId}/images`, data as unknown as Record<string, unknown>)
+      console.log(res.data)
+      return res?.data as WallpaperImage
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro ao adicionar imagem')
+    }
+  },
+
+  async updateImage(imageId: string, data: WallpaperImageUpdateRequest): Promise<WallpaperImage | null> {
+    try {
+      const res = await put<WallpaperImage>(`${ROUTE_ADMIN_API}/${data.wallpaperId}/images/${imageId}`, data as unknown as Record<string, unknown>)
+      console.log(res.data)
+      return res?.data as WallpaperImage
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro ao editar imagem')
+    }
+  },
+
+  async toggleImage(wallpaperId: string, imageId: string): Promise<void> {
+    try {
+      await post(`${ROUTE_API}/${wallpaperId}/toggle`, { imageId } as unknown as Record<string, unknown>)
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro ao fazer toggle da imagem')
+    }
+  },
+
+  QUERY_KEY: {
+    LIST_WALLPAPERS,
+    GET_WALLPAPER,
   }
 }

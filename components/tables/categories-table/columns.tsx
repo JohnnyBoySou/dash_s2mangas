@@ -15,7 +15,7 @@ import type { Category } from "@/types/database"
 
 export const columns = (
   onEdit: (category: Category) => void,
-  onDelete: (id: string) => void,
+  onDelete: (id: string, name: string) => void,
 ): ColumnDef<Category>[] => [
   {
     accessorKey: "name",
@@ -50,7 +50,12 @@ export const columns = (
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onEdit(category)}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDelete(category.id)}>Delete</DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => onDelete(category.id, category.name)}
+              className="text-red-600 focus:text-red-600"
+            >
+              Delete
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )

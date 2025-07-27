@@ -1,180 +1,163 @@
-"use client"
+'use client'
 
-import * as React from "react"
-import { useRouter } from "next/navigation"
-import { v4 as uuidv4 } from "uuid"
-import type { User, Notification } from "@/types/database"
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { AuthService } from '@/services/auth-service'
 
-type AuthContextType = {
-  user: User | null
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  logout: () => Promise<void>
-  register: (username: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>
-  users: User[]
-  addUser: (user: User) => void
-  updateUser: (user: User) => void
-  deleteUser: (id: string) => void
-  notifications: Notification[]
-  addNotification: (notification: Notification) => void
-  updateNotification: (notification: Notification) => void
-  deleteNotification: (id: string) => void
+interface User {
+  id: string
+  name: string
+  email: string
+  username: string
+  bio?: string
+  avatar?: string
+  cover?: string
+  createdAt: string
+  birthdate?: string
+  categories?: Array<{ id: string; name: string }>
+  languages?: Array<{ id: string; name: string }>
+  coins?: number
 }
 
-const AuthContext = React.createContext<AuthContextType | undefined>(undefined)
+interface AuthContextType {
+  user: User | null
+  token: string | null
+  isLoading: boolean
+  login: (email: string, password: string) => Promise<void>
+  register: (name: string, email: string, password: string) => Promise<void>
+  logout: () => void
+  updateProfile: (data: Partial<User>) => Promise<void>
+  deleteAccount: () => Promise<void>
+}
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = React.useState<User | null>(null)
-  const [users, setUsers] = React.useState<User[]>([
-    {
-      id: "mock-user-123",
-      username: "testuser",
-      email: "teste@teste.com",
-      role: "admin",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      notifications: [],
-    },
-  ])
-  const [notifications, setNotifications] = React.useState<Notification[]>([
-    {
-      id: "notif-1",
-      userId: "mock-user-123",
-      type: "info",
-      message: "Welcome to your dashboard!",
-      isRead: false,
-      createdAt: new Date().toISOString(),
-    },
-  ])
-  const router = useRouter()
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-  React.useEffect(() => {
-    // Simulate checking session on mount
-    const storedUser = localStorage.getItem("mockUser")
-    if (storedUser) {
-      setUser(JSON.parse(storedUser))
+interface AuthProviderProps {
+  children: ReactNode
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
+  const [user, setUser] = useState<User | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Load token from localStorage on mount
+  useEffect(() => {
+    const storedToken = localStorage.getItem('auth_token')
+    if (storedToken) {
+      setToken(storedToken)
+      // Chama loadUserProfile diretamente aqui
+      loadUserProfile(storedToken)
+    } else {
+      setIsLoading(false)
     }
   }, [])
 
-  const login = React.useCallback(
-    async (email: string, password: string) => {
-      // Simulate API call for login
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+  const loadUserProfile = async (tokenToUse?: string) => {
+    try {
+      const profile = await AuthService.getProfile()
+      setUser(profile)
+    } catch (error) {
+      console.error('Erro ao carregar perfil:', error)
+      // Token inválido, remove do localStorage
+      localStorage.removeItem('auth_token')
+      setToken(null)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-      const foundUser = users.find((u) => u.email === email)
-
-      if (foundUser && password === "pass") {
-        // For mock, we assume password is 'password' for all users
-        setUser(foundUser)
-        localStorage.setItem("mockUser", JSON.stringify(foundUser))
-        return { success: true }
-      } else {
-        return { success: false, error: "Invalid credentials" }
+  const login = async (email: string, password: string) => {
+    try {
+      setIsLoading(true)
+      const response = await AuthService.login({ email, password })
+      
+      if (response) {
+        setToken(response.token)
+        setUser(response.user)
+        localStorage.setItem('auth_token', response.token)
       }
-    },
-    [users],
-  )
+    } catch (error) {
+      console.error('Erro no login:', error)
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-  const logout = React.useCallback(async () => {
-    // Simulate API call for logout
-    await new Promise((resolve) => setTimeout(resolve, 500))
+  const register = async (name: string, email: string, password: string) => {
+    try {
+      setIsLoading(true)
+      await AuthService.register({ name, email, password })
+      // Após o registro, o usuário precisa verificar o email
+      // Não fazemos login automático
+    } catch (error) {
+      console.error('Erro no registro:', error)
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const logout = () => {
     setUser(null)
-    localStorage.removeItem("mockUser")
-    router.push("/login")
-  }, [router])
+    setToken(null)
+    localStorage.removeItem('auth_token')
+  }
 
-  const register = React.useCallback(
-    async (username: string, email: string, password: string) => {
-      // Simulate API call for registration
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+  const updateProfile = async (data: Partial<User>) => {
+    if (!token) {
+      throw new Error('Usuário não autenticado')
+    }
 
-      if (users.some((u) => u.email === email)) {
-        return { success: false, error: "Email already registered" }
+    try {
+      setIsLoading(true)
+      const updatedUser = await AuthService.updateProfile(data)
+      if (updatedUser) {
+        setUser(updatedUser)
       }
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error)
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-      const newUser: User = {
-        id: uuidv4(),
-        username,
-        email,
-        role: "user", // Default role for new registrations
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        notifications: [],
-      }
-      setUsers((prev) => [...prev, newUser])
-      setUser(newUser)
-      localStorage.setItem("mockUser", JSON.stringify(newUser))
-      return { success: true }
-    },
-    [users],
-  )
+  const deleteAccount = async () => {
+    if (!token) {
+      throw new Error('Usuário não autenticado')
+    }
 
-  const addUser = React.useCallback((user: User) => {
-    setUsers((prev) => [
-      ...prev,
-      { ...user, id: uuidv4(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    ])
-  }, [])
+    try {
+      setIsLoading(true)
+      await AuthService.deleteAccount()
+      logout()
+    } catch (error) {
+      console.error('Erro ao deletar conta:', error)
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-  const updateUser = React.useCallback((updatedUser: User) => {
-    setUsers((prev) =>
-      prev.map((u) => (u.id === updatedUser.id ? { ...updatedUser, updatedAt: new Date().toISOString() } : u)),
-    )
-  }, [])
-
-  const deleteUser = React.useCallback((id: string) => {
-    setUsers((prev) => prev.filter((u) => u.id !== id))
-  }, [])
-
-  const addNotification = React.useCallback((notification: Notification) => {
-    setNotifications((prev) => [...prev, { ...notification, id: uuidv4(), createdAt: new Date().toISOString() }])
-  }, [])
-
-  const updateNotification = React.useCallback((updatedNotification: Notification) => {
-    setNotifications((prev) => prev.map((n) => (n.id === updatedNotification.id ? updatedNotification : n)))
-  }, [])
-
-  const deleteNotification = React.useCallback((id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id))
-  }, [])
-
-  const value = React.useMemo(
-    () => ({
-      user,
-      login,
-      logout,
-      register,
-      users,
-      addUser,
-      updateUser,
-      deleteUser,
-      notifications,
-      addNotification,
-      updateNotification,
-      deleteNotification,
-    }),
-    [
-      user,
-      login,
-      logout,
-      register,
-      users,
-      addUser,
-      updateUser,
-      deleteUser,
-      notifications,
-      addNotification,
-      updateNotification,
-      deleteNotification,
-    ],
-  )
+  const value: AuthContextType = {
+    user,
+    token,
+    isLoading,
+    login,
+    register,
+    logout,
+    updateProfile,
+    deleteAccount,
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
-  const context = React.useContext(AuthContext)
+  const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error('useAuth must be used within an AuthProvider')
   }
   return context
 }

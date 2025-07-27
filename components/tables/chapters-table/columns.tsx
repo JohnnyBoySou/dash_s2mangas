@@ -13,7 +13,7 @@ import {
 import { MoreHorizontal } from "lucide-react"
 import type { Chapter } from "@/types/database"
 
-export const columns = (onEdit: (chapter: Chapter) => void, onDelete: (id: string) => void): ColumnDef<Chapter>[] => [
+export const columns = (onEdit: (chapter: Chapter) => void, onDelete: (id: string, name: string) => void): ColumnDef<Chapter>[] => [
   {
     accessorKey: "mangaId",
     header: "Manga ID",
@@ -55,7 +55,12 @@ export const columns = (onEdit: (chapter: Chapter) => void, onDelete: (id: strin
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onEdit(chapter)}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDelete(chapter.id)}>Delete</DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => onDelete(chapter.id, chapter.title || `Capítulo ${chapter.chapterNumber}`)}
+              className="text-red-600 focus:text-red-600"
+            >
+              Delete
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )

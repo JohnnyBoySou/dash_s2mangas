@@ -13,7 +13,7 @@ import {
 import { MoreHorizontal } from "lucide-react"
 import type { Comment } from "@/types/database"
 
-export const columns = (onEdit: (comment: Comment) => void, onDelete: (id: string) => void): ColumnDef<Comment>[] => [
+export const columns = (onEdit: (comment: Comment) => void, onDelete: (id: string, name: string) => void): ColumnDef<Comment>[] => [
   {
     accessorKey: "mangaId",
     header: "Manga ID",
@@ -51,7 +51,12 @@ export const columns = (onEdit: (comment: Comment) => void, onDelete: (id: strin
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onEdit(comment)}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDelete(comment.id)}>Delete</DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => onDelete(comment.id, `Comentário ${comment.id.slice(0, 8)}`)}
+              className="text-red-600 focus:text-red-600"
+            >
+              Delete
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )

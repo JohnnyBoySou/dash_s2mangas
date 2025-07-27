@@ -1,151 +1,125 @@
-import type { Manga } from "@/types/manga"
+import type { Manga, MangaListResponse, MangaCreateRequest, MangaUpdateRequest } from "@/types/manga"
+import { get, post, del, patch } from "./api-service"
 
-// Mock data for mangas
-const mockMangas: Manga[] = [
-  {
-    id: "manga-1",
-    title: "One Piece",
-    author: "Eiichiro Oda",
-    genre: "Adventure, Fantasy",
-    status: "Ongoing",
-    description: "Follows the adventures of Monkey D. Luffy and his pirate crew.",
-    coverImage: "/placeholder.svg?height=200&width=150",
-    views: 1500000,
-    rating: 4.9,
-    createdAt: "1997-07-22T00:00:00Z",
-    updatedAt: "2023-10-26T00:00:00Z",
-  },
-  {
-    id: "manga-2",
-    title: "Attack on Titan",
-    author: "Hajime Isayama",
-    genre: "Action, Dark Fantasy",
-    status: "Completed",
-    description: "Humanity fights for survival against giant humanoid Titans.",
-    coverImage: "/placeholder.svg?height=200&width=150",
-    views: 1200000,
-    rating: 4.8,
-    createdAt: "2009-09-09T00:00:00Z",
-    updatedAt: "2023-10-26T00:00:00Z",
-  },
-  {
-    id: "manga-3",
-    title: "My Hero Academia",
-    author: "Kohei Horikoshi",
-    genre: "Action, Superhero",
-    status: "Ongoing",
-    description: "A boy born without superpowers dreams of becoming a hero.",
-    coverImage: "/placeholder.svg?height=200&width=150",
-    views: 900000,
-    rating: 4.7,
-    createdAt: "2014-07-07T00:00:00Z",
-    updatedAt: "2023-10-26T00:00:00Z",
-  },
-  {
-    id: "manga-4",
-    title: "Jujutsu Kaisen",
-    author: "Gege Akutami",
-    genre: "Dark Fantasy, Supernatural",
-    status: "Ongoing",
-    description: "A high school student joins a secret organization of Jujutsu Sorcerers.",
-    coverImage: "/placeholder.svg?height=200&width=150",
-    views: 850000,
-    rating: 4.8,
-    createdAt: "2018-03-05T00:00:00Z",
-    updatedAt: "2023-10-26T00:00:00Z",
-  },
-  {
-    id: "manga-5",
-    title: "Chainsaw Man",
-    author: "Tatsuki Fujimoto",
-    genre: "Dark Fantasy, Action",
-    status: "Ongoing",
-    description: "A young man who merges with a chainsaw devil to become a hybrid.",
-    coverImage: "/placeholder.svg?height=200&width=150",
-    views: 700000,
-    rating: 4.7,
-    createdAt: "2018-12-03T00:00:00Z",
-    updatedAt: "2023-10-26T00:00:00Z",
-  },
-]
+// QUERY_KEYS
+const LIST_MANGAS = "LIST_MANGAS"
+const SINGLE_MANGA = "SINGLE_MANGA"
 
+const ROUTE_API = "/mangas"
+const ROUTE_ADMIN_API = "/admin/mangas"
 
+// INTERFACES
+export interface MangaFilters {
+  search?: string
+  status?: string
+  type?: string
+  categories?: string[]
+  language?: string
+}
+
+// FUNCTIONS
 export const MangaService = {
-  getMangas: async (): Promise<Manga[]> => {
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    return mockMangas
-  },
-  addManga: async (newManga: Omit<Manga, "id" | "createdAt" | "updatedAt">): Promise<Manga> => {
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    const id = `manga-${mockMangas.length + 1}`
-    const manga = { ...newManga, id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
-    mockMangas.push(manga)
-    return manga
-  },
-  updateManga: async (updatedManga: Manga): Promise<Manga> => {
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    const index = mockMangas.findIndex((m) => m.id === updatedManga.id)
-    if (index !== -1) {
-      mockMangas[index] = { ...updatedManga, updatedAt: new Date().toISOString() }
-      return mockMangas[index]
-    }
-    throw new Error("Manga not found")
-  },
-  deleteManga: async (id: string): Promise<void> => {
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    const initialLength = mockMangas.length
-    mockMangas.splice(
-      mockMangas.findIndex((manga) => manga.id === id),
-      1,
-    )
-    if (mockMangas.length === initialLength) {
-      throw new Error("Manga not found")
+  async list(page: number = 1, limit: number = 10, filters?: MangaFilters): Promise<MangaListResponse | null> {
+    try {
+      let url = `${ROUTE_ADMIN_API}?page=${page}&limit=${limit}`
+      
+      if (filters) {
+        if (filters.search) url += `&search=${encodeURIComponent(filters.search)}`
+        if (filters.status) url += `&status=${encodeURIComponent(filters.status)}`
+        if (filters.type) url += `&type=${encodeURIComponent(filters.type)}`
+        if (filters.language) url += `&language=${encodeURIComponent(filters.language)}`
+        if (filters.categories && filters.categories.length > 0) {
+          url += `&categories=${filters.categories.join(',')}`
+        }
+      }
+      
+      const res = await get<MangaListResponse>(url)
+      console.log(res.data)
+      return res?.data as MangaListResponse
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro na listagem de mangás')
     }
   },
-  getManga: async (id: string): Promise<Manga> => {
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    const manga = mockMangas.find((m) => m.id === id)
-    if (manga) {
-      return manga
+
+  async single(id: string): Promise<Manga | null> {
+    try {
+      const res = await get<Manga>(`${ROUTE_API}/${id}`)
+      console.log(res.data)
+      return res?.data as Manga
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro ao buscar mangá')
     }
-    throw new Error("Manga not found")
   },
- 
-}
 
-export const getMangas = async (): Promise<Manga[]> => {
-  // Simulate API call delay
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  return mockMangas
-}
+  async create(data: MangaCreateRequest): Promise<Manga | null> {
+    try {
+      const res = await post<Manga>(`${ROUTE_ADMIN_API}`, data as unknown as Record<string, unknown>)
+      console.log(res.data)
+      return res?.data as Manga
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro na criação de mangá')
+    }
+  },
 
-export const addMockManga = async (newManga: Omit<Manga, "id" | "createdAt" | "updatedAt">): Promise<Manga> => {
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  const id = `manga-${mockMangas.length + 1}`
-  const manga = { ...newManga, id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
-  mockMangas.push(manga)
-  return manga
-}
+  async update(id: string, data: MangaUpdateRequest): Promise<Manga | null> {
+    try {
+      const res = await patch<Manga>(`${ROUTE_ADMIN_API}/${id}`, data as unknown as Record<string, unknown>)
+      console.log(res.data)
+      return res?.data as Manga
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro ao atualizar mangá')
+    }
+  },
 
-export const updateMockManga = async (updatedManga: Manga): Promise<Manga> => {
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  const index = mockMangas.findIndex((m) => m.id === updatedManga.id)
-  if (index !== -1) {
-    mockMangas[index] = { ...updatedManga, updatedAt: new Date().toISOString() }
-    return mockMangas[index]
-  }
-  throw new Error("Manga not found")
-}
+  async delete(id: string): Promise<void> {
+    try {
+      await del(`${ROUTE_ADMIN_API}/${id}`)
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro ao deletar mangá')
+    }
+  },
 
-export const deleteMockManga = async (id: string): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  const initialLength = mockMangas.length
-  mockMangas.splice(
-    mockMangas.findIndex((manga) => manga.id === id),
-    1,
-  )
-  if (mockMangas.length === initialLength) {
-    throw new Error("Manga not found")
+  // Métodos auxiliares
+  async getByUuid(manga_uuid: string): Promise<Manga | null> {
+    try {
+      const res = await get<Manga>(`${ROUTE_API}/uuid/${manga_uuid}`)
+      console.log(res.data)
+      return res?.data as Manga
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro ao buscar mangá por UUID')
+    }
+  },
+
+  async getCategories(): Promise<{ id: string; name: string }[] | null> {
+    try {
+      const res = await get<{ id: string; name: string }[]>(`${ROUTE_API}/categories`)
+      console.log(res.data)
+      return res?.data as { id: string; name: string }[]
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro ao buscar categorias')
+    }
+  },
+
+  async getLanguages(): Promise<{ id: string; code: string; name: string }[] | null> {
+    try {
+      const res = await get<{ id: string; code: string; name: string }[]>(`${ROUTE_API}/languages`)
+      console.log(res.data)
+      return res?.data as { id: string; code: string; name: string }[]
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro ao buscar idiomas')
+    }
+  },
+
+  QUERY_KEY: {
+    LIST_MANGAS,
+    SINGLE_MANGA,
   }
 }

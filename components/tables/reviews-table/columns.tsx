@@ -13,7 +13,7 @@ import {
 import { MoreHorizontal } from "lucide-react"
 import type { Review } from "@/types/database"
 
-export const columns = (onEdit: (review: Review) => void, onDelete: (id: string) => void): ColumnDef<Review>[] => [
+export const columns = (onEdit: (review: Review) => void, onDelete: (id: string, name: string) => void): ColumnDef<Review>[] => [
   {
     accessorKey: "mangaId",
     header: "Manga ID",
@@ -53,7 +53,12 @@ export const columns = (onEdit: (review: Review) => void, onDelete: (id: string)
             <DropdownMenuItem onClick={() => navigator.clipboard.writeText(review.id)}>Copy Review ID</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onEdit(review)}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDelete(review.id)}>Delete</DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => onDelete(review.id, `Review ${review.id.slice(0, 8)}`)}
+              className="text-red-600 focus:text-red-600"
+            >
+              Delete
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )

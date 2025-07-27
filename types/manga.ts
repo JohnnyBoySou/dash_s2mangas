@@ -1,23 +1,69 @@
-export interface Manga {
+export interface Category {
   id: string
-  title: string
-  author: string
-  genre: string
-  status: "Ongoing" | "Completed" | "Hiatus" | "Cancelled"
-  description: string
-  coverImage: string // URL to the cover image
-  views: number
-  rating: number // Average rating out of 5
-  createdAt: string // ISO date string
-  updatedAt: string // ISO date string
-  chapters?: Chapter[]
-  reviews?: Review[]
-  comments?: Comment[]
-  collections?: Collection[]
-  languages?: Language[]
-  mangaLists?: MangaList[]
+  name: string
 }
 
+export interface Translation {
+  id: string
+  mangaId: string
+  language: string
+  name: string
+  description: string
+}
+
+export interface Language {
+  id: string
+  code: string
+  name: string
+}
+
+export interface Manga {
+  id: string
+  cover: string
+  status: string
+  type: string
+  createdAt: string
+  updatedAt: string
+  releaseDate: string
+  manga_uuid: string
+  categories: Category[]
+  translations: Translation[]
+  languages: Language[]
+  title: string
+  description: string
+}
+
+export interface MangaListResponse {
+  data: Manga[]
+  pagination: {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
+    next: boolean
+    prev: boolean
+  }
+}
+
+export interface MangaCreateRequest {
+  cover: string
+  status: string
+  type: string
+  releaseDate: string
+  manga_uuid: string
+  categories: string[] // IDs das categorias
+  translations: {
+    language: string
+    name: string
+    description: string
+  }[]
+}
+
+export interface MangaUpdateRequest extends MangaCreateRequest {
+  id: string
+}
+
+// Tipos legados mantidos para compatibilidade
 export interface Chapter {
   id: string
   mangaId: string
@@ -49,12 +95,6 @@ export interface Collection {
   name: string
   description: string
   mangaIds: string[] // IDs of mangas in this collection
-}
-
-export interface Language {
-  id: string
-  name: string
-  code: string // e.g., "en", "pt-BR"
 }
 
 export interface MangaList {

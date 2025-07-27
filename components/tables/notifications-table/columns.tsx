@@ -15,29 +15,72 @@ import type { Notification } from "@/types/database"
 
 export const columns = (
   onEdit: (notification: Notification) => void,
-  onDelete: (id: string) => void,
+  onDelete: (id: string, name: string) => void,
 ): ColumnDef<Notification>[] => [
   {
-    accessorKey: "userId",
-    header: "User ID",
+    accessorKey: "cover",
+    header: "Cover",
+    cell: ({ row }) => {
+      const cover = row.original.cover
+      return cover ? (
+        <img 
+          src={cover} 
+          alt="Cover" 
+          className="w-12 h-12 object-cover rounded-md"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none'
+          }}
+        />
+      ) : (
+        <div className="w-12 h-12 bg-gray-200 rounded-md flex items-center justify-center text-xs text-gray-500">
+          Sem cover
+        </div>
+      )
+    },
   },
   {
-    accessorKey: "type",
-    header: "Type",
+    accessorKey: "title",
+    header: "Título",
   },
   {
     accessorKey: "message",
-    header: "Message",
+    header: "Mensagem",
+    cell: ({ row }) => {
+      const message = row.original.message
+      return (
+        <div className="max-w-[300px] truncate" title={message}>
+          {message}
+        </div>
+      )
+    },
   },
   {
-    accessorKey: "isRead",
-    header: "Read",
-    cell: ({ row }) => (row.original.isRead ? "Yes" : "No"),
+    accessorKey: "type",
+    header: "Tipo",
+    cell: ({ row }) => {
+      const type = row.original.type
+      const typeColors = {
+        NEWS: "bg-blue-100 text-blue-800",
+        UPDATE: "bg-green-100 text-green-800",
+        WARNING: "bg-yellow-100 text-yellow-800",
+        ERROR: "bg-red-100 text-red-800",
+      }
+      return (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${typeColors[type]}`}>
+          {type}
+        </span>
+      )
+    },
   },
   {
     accessorKey: "createdAt",
-    header: "Created At",
-    cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString(),
+    header: "Criado em",
+    cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString('pt-BR'),
+  },
+  {
+    accessorKey: "updatedAt",
+    header: "Atualizado em",
+    cell: ({ row }) => new Date(row.original.updatedAt).toLocaleDateString('pt-BR'),
   },
   {
     id: "actions",
@@ -59,7 +102,12 @@ export const columns = (
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onEdit(notification)}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDelete(notification.id)}>Delete</DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => onDelete(notification.id, notification.title)}
+              className="text-red-600 focus:text-red-600"
+            >
+              Excluir
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )

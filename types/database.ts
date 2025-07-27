@@ -66,11 +66,13 @@ export type Language = {
 
 export type Notification = {
   id: string
-  userId: string // Foreign key to User
-  type: "info" | "warning" | "error" | "success"
+  title: string
   message: string
-  isRead: boolean
+  type: "NEWS" | "UPDATE" | "WARNING" | "ERROR"
+  data: any | null
+  cover?: string // URL da imagem de cover (opcional)
   createdAt: string // ISO date string
+  updatedAt: string // ISO date string
 }
 
 export type MangaList = {
@@ -82,25 +84,74 @@ export type MangaList = {
   updatedAt: string // ISO date string
 }
 
+export type WallpaperImage = {
+  id: string
+  wallpaperId: string
+  url: string
+}
+
 export type Wallpaper = {
   id: string
-  title: string
-  imageUrl: string
-  category: string
-  tags: string[]
-  uploaderId: string // Foreign key to User
-  views: number
-  downloads: number
+  name: string
+  cover: string
+  createdAt: string // ISO date string
+  updatedAt: string // ISO date string
+  _count?: {
+    images: number
+  }
+  totalImages?: number
+  images?: WallpaperImage[]
+}
+
+export type Tag = {
+  id: string
+  name: string
+  color?: string // Cor hexadecimal para a tag (opcional)
   createdAt: string // ISO date string
   updatedAt: string // ISO date string
 }
 
 export type Playlist = {
   id: string
-  userId: string // Foreign key to User
   name: string
+  cover: string // URL da imagem de capa
+  link: string // Link do Spotify ou outra plataforma
   description: string
-  coverImage: string // URL to the cover image
+  tags?: Tag[] // Tags associadas à playlist
   createdAt: string // ISO date string
   updatedAt: string // ISO date string
+}
+
+export type Pagination = {
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+  next: boolean
+  prev: boolean
+}
+
+export type TagListResponse = {
+  data: Tag[]
+  pagination?: Pagination
+}
+
+export type PlaylistListResponse = {
+  data: Playlist[]
+  pagination: Pagination
+}
+
+export type WallpaperListResponse = {
+  data: Wallpaper[]
+  pagination: Pagination
+}
+
+export type WallpaperSingleResponse = {
+  data: Wallpaper
+  pagination?: Pagination
+}
+
+export type NotificationListResponse = {
+  data: Notification[]
+  pagination: Pagination
 }

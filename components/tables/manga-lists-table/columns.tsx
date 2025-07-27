@@ -15,7 +15,7 @@ import type { MangaList } from "@/types/database"
 
 export const columns = (
   onEdit: (mangaList: MangaList) => void,
-  onDelete: (id: string) => void,
+  onDelete: (id: string, name: string) => void,
 ): ColumnDef<MangaList>[] => [
   {
     accessorKey: "name",
@@ -54,7 +54,12 @@ export const columns = (
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onEdit(mangaList)}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDelete(mangaList.id)}>Delete</DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => onDelete(mangaList.id, mangaList.name)}
+              className="text-red-600 focus:text-red-600"
+            >
+              Delete
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )

@@ -15,7 +15,7 @@ import type { Collection } from "@/types/database"
 
 export const columns = (
   onEdit: (collection: Collection) => void,
-  onDelete: (id: string) => void,
+  onDelete: (id: string, name: string) => void,
 ): ColumnDef<Collection>[] => [
   {
     accessorKey: "name",
@@ -54,7 +54,12 @@ export const columns = (
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onEdit(collection)}>Edit</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDelete(collection.id)}>Delete</DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => onDelete(collection.id, collection.name)}
+              className="text-red-600 focus:text-red-600"
+            >
+              Delete
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )

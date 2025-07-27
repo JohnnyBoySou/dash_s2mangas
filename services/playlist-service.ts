@@ -1,70 +1,116 @@
-import type { Playlist } from "@/types/database"
+import type { Playlist, PlaylistListResponse } from "@/types/database"
+import { get, post, del, put, } from "./api-service"
 
-// Mock data for playlists
-const mockPlaylists: Playlist[] = [
-  {
-    id: "pl-1",
-    userId: "user-1",
-    name: "Chill Study Beats",
-    description: "Relaxing tunes for focus and study.",
-    coverImage: "/placeholder.svg?height=100&width=100",
-    createdAt: "2023-01-01T10:00:00Z",
-    updatedAt: "2023-01-01T10:00:00Z",
-  },
-  {
-    id: "pl-2",
-    userId: "user-2",
-    name: "Workout Motivation",
-    description: "High-energy tracks to power your workouts.",
-    coverImage: "/placeholder.svg?height=100&width=100",
-    createdAt: "2023-01-05T10:00:00Z",
-    updatedAt: "2023-01-05T10:00:00Z",
-  },
-  {
-    id: "pl-3",
-    userId: "user-1",
-    name: "Road Trip Anthems",
-    description: "Classic hits for long drives.",
-    coverImage: "/placeholder.svg?height=100&width=100",
-    createdAt: "2023-01-10T10:00:00Z",
-    updatedAt: "2023-01-10T10:00:00Z",
-  },
-]
+// QUERY_KEYS
+const LIST_PLAYLISTS = "LIST_PLAYLISTS"
 
-export const getPlaylists = async (): Promise<Playlist[]> => {
-  // Simulate API call delay
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  return mockPlaylists
+const ROUTE_API = "/playlists"
+const ROUTE_ADMIN_API = "/admin/playlists"
+
+// INTERFACES
+export interface PlaylistCreateRequest {
+  name: string
+  cover: string
+  link: string
+  description: string
+  tags?: string[] // IDs das tags
 }
 
-export const addMockPlaylist = async (
-  newPlaylist: Omit<Playlist, "id" | "createdAt" | "updatedAt">,
-): Promise<Playlist> => {
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  const id = `pl-${mockPlaylists.length + 1}`
-  const playlist = { ...newPlaylist, id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
-  mockPlaylists.push(playlist)
-  return playlist
+export interface PlaylistUpdateRequest extends PlaylistCreateRequest {
+  id: string
 }
 
-export const updateMockPlaylist = async (updatedPlaylist: Playlist): Promise<Playlist> => {
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  const index = mockPlaylists.findIndex((p) => p.id === updatedPlaylist.id)
-  if (index !== -1) {
-    mockPlaylists[index] = { ...updatedPlaylist, updatedAt: new Date().toISOString() }
-    return mockPlaylists[index]
-  }
-  throw new Error("Playlist not found")
-}
+// FUNCTIONS
+export const PlaylistsService = {
+  async list(page: number = 1, limit: number = 10): Promise<PlaylistListResponse | null> {
+    try {
+      const res = await get<any>(`${ROUTE_API}?page=${page}&limit=${limit}`)
+      console.log('Raw response:', res.data)
+      
+      // Transformar a estrutura das tags se necessário
+      if (res?.data?.data) {
+        const transformedData = {
+          ...res.data,
+          data: res.data.data.map((playlist: any) => ({
+            ...playlist,
+            tags: playlist.tags?.map((playlistTag: any) => 
+              playlistTag.tag ? playlistTag.tag : playlistTag
+            ) || []
+          }))
+        }
+        console.log('Transformed response:', transformedData)
+        return transformedData as PlaylistListResponse
+      }
+      
+      return res?.data as PlaylistListResponse
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro na listagem de playlists')
+    }
+  },
 
-export const deleteMockPlaylist = async (id: string): Promise<void> => {
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  const initialLength = mockPlaylists.length
-  mockPlaylists.splice(
-    mockPlaylists.findIndex((playlist) => playlist.id === id),
-    1,
-  )
-  if (mockPlaylists.length === initialLength) {
-    throw new Error("Playlist not found")
+  async single(id: string){
+
+  },
+
+  async create(data: PlaylistCreateRequest): Promise<Playlist | null> {
+    try {
+      const res = await post<any>(`${ROUTE_ADMIN_API}`, data as unknown as Record<string, unknown>)
+      console.log('Create response:', res.data)
+      
+      // Transformar a estrutura das tags se necessário
+      if (res?.data?.tags) {
+        const transformedPlaylist = {
+          ...res.data,
+          tags: res.data.tags.map((playlistTag: any) => 
+            playlistTag.tag ? playlistTag.tag : playlistTag
+          )
+        }
+        console.log('Transformed create response:', transformedPlaylist)
+        return transformedPlaylist as Playlist
+      }
+      
+      return res?.data as Playlist
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro na criação de playlist')
+    }
+  },
+
+  async delete(id: string): Promise<void> {
+    try {
+      await del(`${ROUTE_ADMIN_API}/${id}`)
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro ao deletar playlist')
+    }
+  },
+
+  async edit(id: string, data: PlaylistUpdateRequest): Promise<Playlist | null> {
+    try {
+      const res = await put<any>(`${ROUTE_ADMIN_API}/${id}`, data as unknown as Record<string, unknown>)
+      console.log('Edit response:', res.data)
+      
+      // Transformar a estrutura das tags se necessário
+      if (res?.data?.tags) {
+        const transformedPlaylist = {
+          ...res.data,
+          tags: res.data.tags.map((playlistTag: any) => 
+            playlistTag.tag ? playlistTag.tag : playlistTag
+          )
+        }
+        console.log('Transformed edit response:', transformedPlaylist)
+        return transformedPlaylist as Playlist
+      }
+      
+      return res?.data as Playlist
+    } catch (error) {
+      console.log(error)
+      throw new Error((error as Error).message || 'Erro ao editar playlist')
+    }
+  },
+
+  QUERY_KEY: {
+    LIST_PLAYLISTS,
   }
 }
