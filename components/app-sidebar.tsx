@@ -109,7 +109,7 @@ const otherNavItems = [
 export function AppSidebar() {
   const { user, logout } = useAuth()
   return (
-    <Sidebar  className="bg-red-900">
+    <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
@@ -123,11 +123,11 @@ export function AppSidebar() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input 
             placeholder="Search..." 
-            className="pl-10 bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-gray-600"
+            className="pl-10 text-white placeholder-gray-400 focus:border-gray-600"
           />
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <kbd className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded">⌘</kbd>
-            <kbd className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded ml-1">F</kbd>
+            <kbd className="px-2 py-1 text-xs bg-primary-700 text-gray-300 rounded">⌘</kbd>
+            <kbd className="px-2 py-1 text-xs bg-primary-700 text-gray-300 rounded ml-1">F</kbd>
           </div>
         </div>
       </SidebarHeader>

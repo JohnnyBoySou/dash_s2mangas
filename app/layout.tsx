@@ -1,12 +1,12 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Work_Sans } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import ClientLayout from "./ClientLayout"
 import { AuthProvider } from "@/contexts/auth-context"
 import { QueryProvider } from "@/contexts/query-provider"
 
+import { Work_Sans } from "next/font/google"
 const work_sans = Work_Sans({ subsets: ["latin"] })
 
 export const metadata: Metadata = {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { PlusIcon } from "lucide-react"
 import { DataTable } from "@/components/tables/data-table/data-table"
@@ -18,7 +18,7 @@ export default function MangasPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedManga, setSelectedManga] = useState<Manga | null>(null)
 
-  // Usando o hook useMangas
+  // Usando o hook useMangas com os valores atuais de page, limit e filters
   const {
     mangas,
     pagination,
@@ -33,7 +33,7 @@ export default function MangasPage() {
     addManga,
     updateManga,
     deleteManga,
-    refetchWithParams,
+    refetch,
     prefetchNextPage
   } = useMangas({ page, limit, filters })
 
@@ -105,15 +105,23 @@ export default function MangasPage() {
     }
   }
 
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage)
-    refetchWithParams(newPage, filters)
-    
-    // Prefetch da próxima página se disponível
-    if (newPage < pagination.totalPages) {
-      prefetchNextPage()
+  const handlePageChange = useCallback((newPage: number) => {
+    if (newPage >= 1 && newPage <= (pagination?.totalPages || 1)) {
+      console.log('Changing page from', page, 'to', newPage)
+      setPage(newPage)
     }
-  }
+  }, [page, pagination?.totalPages])
+
+  // Prefetch da próxima página quando a página atual mudar
+  useEffect(() => {
+    if (pagination?.next && page < (pagination?.totalPages || 1)) {
+      const timeoutId = setTimeout(() => {
+        prefetchNextPage()
+      }, 100)
+      
+      return () => clearTimeout(timeoutId)
+    }
+  }, [page, pagination, prefetchNextPage])
 
   if (error) {
     return (
@@ -122,7 +130,7 @@ export default function MangasPage() {
           <h2 className="text-2xl font-bold text-red-600">Erro ao carregar mangás</h2>
           <p className="text-muted-foreground mt-2">{(error as Error).message}</p>
           <Button 
-            onClick={() => refetchWithParams(page, filters)} 
+            onClick={() => refetch()} 
             className="mt-4"
             variant="outline"
           >
@@ -166,30 +174,32 @@ export default function MangasPage() {
       />
       
       {/* Paginação */}
-      <div className="flex items-center justify-between space-x-2 py-4">
-        <div className="text-sm text-muted-foreground">
-          Página {pagination.page} de {pagination.totalPages} 
-          ({pagination.total} total)
+      {pagination && pagination.totalPages > 0 && (
+        <div className="flex items-center justify-between space-x-2 py-4">
+          <div className="text-sm text-muted-foreground">
+            Página {pagination.page} de {pagination.totalPages} 
+            ({pagination.total} total)
+          </div>
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(page - 1)}
+              disabled={!pagination.prev || isLoading || isDeleting}
+            >
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(page + 1)}
+              disabled={!pagination.next || isLoading || isDeleting}
+            >
+              Próxima
+            </Button>
+          </div>
         </div>
-        <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(page - 1)}
-            disabled={!pagination.prev || isLoading || isDeleting}
-          >
-            Anterior
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(page + 1)}
-            disabled={!pagination.next || isLoading || isDeleting}
-          >
-            Próxima
-          </Button>
-        </div>
-      </div>
+      )}
       
       <MangaModal 
         isOpen={isModalOpen} 
