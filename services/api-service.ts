@@ -17,7 +17,13 @@ const baseHeaders: Record<string, string> = {
   'Content-Type': 'application/json',
 };
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || 'http://localhost:3000';
+
+// Validação para garantir que a BASE_URL nunca seja undefined ou vazia
+if (!BASE_URL || BASE_URL === 'undefined') {
+  console.error('❌ NEXT_PUBLIC_API_BASE_URL não está configurada corretamente!');
+  throw new Error('Configuração de API inválida. Verifique as variáveis de ambiente.');
+}
 
 // Função para pegar o token do localStorage
 function getStoredToken(): string | null {
